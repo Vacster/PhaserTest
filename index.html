@@ -13,6 +13,8 @@
     <script type="text/javascript">
     document.getElementById("gamediv").oncontextmenu = function (e) {e.preventDefault();};
 
+    var urlParams;
+
     window.onload = function() {
         const horizontal_step = 0.5;
         const max_acc = 15;
@@ -48,6 +50,7 @@
 
           rocks = game.add.group();
           setInterval(spawn_rock, 900);
+          getUrlParams();
         }
 
         function update ()
@@ -82,14 +85,17 @@
 
         function render()
         {
-          game.debug.body(plane);
-          rocks.forEach(function(rock, index, object){
-            game.debug.body(rock);
-          });
-          game.debug.spriteInfo(plane, plane.x <= game.world.width/2 ? plane.x + 100 : plane.x - 450, plane.y - 100);
-          game.debug.text("Acceleration: " + acc, 32, 32);
-          game.debug.text("Health: " + health, 32, 50);
-          game.debug.text("Rocks Spawned: " + rocks.length, 32, 68);
+          if(urlParams["debug"] == 'true')
+          {
+            game.debug.body(plane);
+            rocks.forEach(function(rock, index, object){
+              game.debug.body(rock);
+            });
+            game.debug.spriteInfo(plane, plane.x <= game.world.width/2 ? plane.x + 100 : plane.x - 450, plane.y - 100);
+            game.debug.text("Acceleration: " + acc, 32, 32);
+            game.debug.text("Health: " + health, 32, 50);
+            game.debug.text("Rocks Spawned: " + rocks.length, 32, 68);
+          }
         }
 
         function determineFrame()
@@ -136,6 +142,19 @@
           health = 3;
           plane.x = game.world.width/2;
           rocks.removeAll(true, false);
+        }
+
+        function getUrlParams()
+        {
+          var match,
+              pl     = /\+/g,  // Regex for replacing addition symbol with a space
+              search = /([^&=]+)=?([^&]*)/g,
+              decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+              query  = window.location.search.substring(1);
+
+          urlParams = {};
+          while (match = search.exec(query))
+             urlParams[decode(match[1])] = decode(match[2]);
         }
     };
 
