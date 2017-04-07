@@ -125,10 +125,12 @@
               rock.angle += 5;
               if(game.physics.arcade.collide(rock, plane))
               {
+                game.camera.shake(0.005, 500);
                 emitter.x = rock.x;
                 emitter.y = rock.y;
                 emitter.start(true, 1500, null, 20);
                 rock.destroy();
+                //TODO: Modify acc on hit
                 health -= 1;
                 if(health == 0)
                   restart();
