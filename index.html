@@ -20,6 +20,7 @@
         const lower_bound = 100;
         const game = new Phaser.Game(1280, 720, Phaser.AUTO, 'gamediv', { preload: preload, create: create, update: update, render: render });
 
+        var started = false;
         var rocks;
         var mouse, plane;
         var acc = 0;
@@ -38,87 +39,91 @@
           game.scale.pageAlignVertically = true;
 
           plane = game.add.sprite(game.world.centerX, game.world.height * 0.8, 'plane');
+	        game.physics.startSystem(Phaser.Physics.P2JS);
           plane.anchor.x = 0.5;
           plane.anchor.y = 0.5;
+          plane.frame = 2;
+          game.physics.p2.enable(plane);
+          plane.body.setRectangle(180,50);
+          plane.body.debug = true;
 
           rocks = game.add.group();
+          setInterval(spawn_rock, 900);
         }
 
         function update ()
         {
           mouse = game.input.activePointer;
 
-          if(plane.x < lower_bound)
+          if(started)
           {
-            plane.x = lower_bound;
-            acc = 0;
-            spawn_rock();
+            if(plane.x < lower_bound)
+            {
+              plane.x = lower_bound;
+              acc = 0;
+            }
+            else if(plane.x > upper_bound)
+            {
+              plane.x = upper_bound;
+              acc = 0;
+            }
+
+            acc += mouse.isDown ? (acc > - max_acc ? - horizontal_step : 0) : (acc < max_acc ? horizontal_step : 0);
+
+            plane.body.moveRight(acc * 50);
+            plane.body.angle = acc * 2;
+
+            update_rocks();
           }
-          else if(plane.x > upper_bound)
-          {
-            plane.x = upper_bound;
-            acc = 0;
-            restart();
-          }
+          else
+            if(mouse.isDown)
+              started = true;
 
-          acc += mouse.isDown ? (acc > - max_acc ? - horizontal_step : 0) : (acc < max_acc ? horizontal_step : 0);
-
-          plane.x += acc;
-
-          update_rocks();
-          determineFrame();
         }
 
         function render()
         {
+          game.debug.body(plane);
+          rocks.forEach(function(rock, index, object){
+            game.debug.body(rock);
+          });
           game.debug.spriteInfo(plane, plane.x <= game.world.width/2 ? plane.x + 100 : plane.x - 450, plane.y - 100);
           game.debug.text("Acceleration: " + acc, 32, 32);
           game.debug.text("Frame: " + plane.frame, 32, 50);
           game.debug.text("Rocks Spawned: " + rocks.length, 32, 68);
         }
 
-        function determineFrame()
-        {
-          if(acc > 13)
-            plane.frame = 4;
-          else if(acc > 4)
-            plane.frame = 3;
-          else if(acc < -13)
-            plane.frame = 0;
-          else if(acc < -4)
-            plane.frame = 1;
-          else
-            plane.frame = 2;
-        }
-
-        function restart()
-        {
-          acc = 0;
-          plane.x = game.world.width/2;
-          plane.frame = 2;
-          rocks.removeAll(true, false);
-        }
-
         function update_rocks()
         {
           rocks.forEach(function(rock, index, object){
             if(rock.y > 720 + (rock.height/2))
-            {
               rock.destroy();
-            }
             else
             {
               rock.y += 5;
               rock.angle += 5;
+              if(game.physics.arcade.collide(rock, plane))
+                restart();
             }
           });
         }
 
         function spawn_rock()
         {
-          var rock = rocks.create(Math.random() * (upper_bound - lower_bound) + lower_bound, 0, 'rock');
+          if(!started || !document.hasFocus())
+            return;
+          var rock = rocks.create(Math.random() * 1080 + 100, 0, 'rock');
           rock.anchor.x = 0.5;
           rock.anchor.y = 0.5;
+          rock.angle = Math.random() * 360;
+        }
+
+        function restart()
+        {
+          started = false;
+          acc = 0;
+          plane.x = game.world.width/2;
+          rocks.removeAll(true, false);
         }
     };
 
