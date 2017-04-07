@@ -5,43 +5,74 @@
         <title>Phaser Test!</title>
         <script src="/phaser.js"></script>
     </head>
-    <body>
+
+    <body style="background-color:black">
+      <div id="gamediv" style="width:85%; height:100%; margin:auto"></div>
+    </body>
 
     <script type="text/javascript">
 
     window.onload = function() {
+        const horizontal_step = 0.5;
+        const max_acc = 15;
 
-        //  Note that this html file is set to pull down Phaser 2.5.0 from the JS Delivr CDN.
-        //  Although it will work fine with this tutorial, it's almost certainly not the most current version.
-        //  Be sure to replace it with an updated version before you start experimenting with adding your own code.
-
-        var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
-        var plane;
+        var game = new Phaser.Game(1280, 720, Phaser.AUTO, 'gamediv', { preload: preload, create: create, update: update, render: render });
+        var mouse, plane;
+        var acc = 0;
 
         function preload () {
-            game.load.image('plane-front', 'plane-front.png');
-            cursors = game.input.keyboard.createCursorKeys();
+          game.load.spritesheet('plane', 'airplane.png', 200, 200, 25);
+          game.input.mouse.capture = true;
         }
 
         function create () {
-            plane = game.add.sprite(game.world.centerX, game.world.centerY, 'plane-front');
-            plane.anchor.setTo(0.5, 0.5);
+          game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+          game.scale.pageAlignHorizontally = true;
+          game.scale.pageAlignVertically = true;
+
+          plane = game.add.sprite(game.world.centerX, game.world.height * 0.8, 'plane');
+          plane.anchor.x = 0.5;
+          plane.anchor.y = 0.5;
+
         }
 
         function update () {
-          if(cursors.left.isDown)
+          mouse = game.input.activePointer;
+
+          if(mouse.isDown)
           {
-            plane.x -= 1;
+            acc -= acc > - max_acc ? horizontal_step : 0;
           }
-          else if(cursors.right.isDown)
+          else
           {
-            plane.x += 1;
+            acc += acc < max_acc ? horizontal_step : 0;
           }
+
+          determineFrame();
+          plane.x += acc;
         }
 
+        function render()
+        {
+          game.debug.spriteInfo(plane, plane.x + 100, plane.y - 100);
+          game.debug.text("Acceleration: " + acc, 32, 32);
+          game.debug.text("Frame: " + plane.frame, 32, 64);
+        }
+
+        function determineFrame()
+        {
+          if(acc > 13)
+            plane.frame = 4;
+          else if(acc > 4)
+            plane.frame = 3;
+          else if(acc < -13)
+            plane.frame = 0;
+          else if(acc < -4)
+            plane.frame = 1;
+          else
+            plane.frame = 2;
+        }
     };
 
     </script>
-
-    </body>
 </html>
