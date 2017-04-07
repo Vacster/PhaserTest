@@ -18,15 +18,15 @@
         var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create });
 
         function preload () {
-
-            game.load.image('logo', 'phaser.png');
-
+            game.load.image('plane-front', 'plane-front.png');
         }
 
         function create () {
-
-            var logo = game.add.sprite(game.world.centerX, game.world.centerY, 'logo');
+            var logo = game.add.sprite(game.world.centerX, game.world.centerY, 'plane-front');
             logo.anchor.setTo(0.5, 0.5);
+        }
+
+        function update () {
 
         }
 
