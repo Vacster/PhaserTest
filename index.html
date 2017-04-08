@@ -23,17 +23,16 @@
         const game = new Phaser.Game(1280, 720, Phaser.AUTO, 'gamediv', { preload: preload, create: create, update: update, render: render });
 
         var started = false;
-        var rocks;
-        var mouse, plane;
+        var rocks, mouse, plane;
         var acc = 0;
         var health = 3;
-        var emitter;
+        var emitter, bottom_emitter, plane_emitter;
 
         function preload ()
         {
           game.load.spritesheet('plane', 'airplane.png', 200, 200, 25);
           game.load.image('rock', 'rock.png');
-          game.load.image('fire', 'rock.png');
+          game.load.image('fire', 'fire.png');
           game.input.mouse.capture = true;
         }
 
@@ -42,6 +41,17 @@
           game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
           game.scale.pageAlignHorizontally = true;
           game.scale.pageAlignVertically = true;
+
+          plane_emitter = game.add.emitter(50, 720, 200);
+          plane_emitter.makeParticles('fire');
+          plane_emitter.minParticleScale = 0.5;
+          plane_emitter.maxParticleScale = 0.6;
+          plane_emitter.minParticleSpeed.set(-200, 200);
+          plane_emitter.maxParticleSpeed.set(200, 400);
+          plane_emitter.setAlpha(1, 0, 1000);
+          plane_emitter.start(false, 1000, 10);
+          plane_emitter.y = game.world.height*0.86;
+          plane_emitter.x = game.world.centerX;
 
           plane = game.add.sprite(game.world.centerX, game.world.height * 0.8, 'plane');
           game.physics.enable(plane, Phaser.Physics.ARCADE);
@@ -53,12 +63,20 @@
           rocks = game.add.group();
 
           emitter = game.add.emitter(50, 50, 200);
-          emitter.makeParticles('fire');
+          emitter.makeParticles('rock');
           emitter.minParticleScale = 0.02;
           emitter.maxParticleScale = 0.3;
           emitter.minParticleSpeed.set(-500, -500);
           emitter.maxParticleSpeed.set(500, 500);
           emitter.setAlpha(1, 0, 1500);
+
+          bottom_emitter = game.add.emitter(50, 720, 200);
+          bottom_emitter.makeParticles('rock');
+          bottom_emitter.minParticleScale = 0.02;
+          bottom_emitter.maxParticleScale = 0.3;
+          bottom_emitter.minParticleSpeed.set(-300, -100);
+          bottom_emitter.maxParticleSpeed.set(300, -300);
+          bottom_emitter.setAlpha(1, 0, 1000);
 
           setInterval(spawn_rock, 900);
           getUrlParams();
@@ -84,6 +102,7 @@
             acc += mouse.isDown ? (acc > - max_acc ? - horizontal_step : 0) : (acc < max_acc ? horizontal_step : 0);
 
             plane.x += acc;
+            plane_emitter.x = plane.x - (acc * 2);
 
             update_rocks();
           }
@@ -118,7 +137,12 @@
         {
           rocks.forEach(function(rock, index, object){
             if(rock.y > 720 + (rock.height/2))
+            {
+              bottom_emitter.x = rock.x;
+              game.camera.shake(0.002, 500);
+              bottom_emitter.start(true, 1000, null, 10);
               rock.destroy();
+            }
             else
             {
               rock.y += 5;
